@@ -1,1 +1,37 @@
+# Get top 20 spam indicators
+feature_names = vectorizer.get_feature_names_out()
+coefs = model.coef_[0]
+top_spam_words = pd.Series(coefs, index=feature_names).sort_values(ascending=False)[:20]
 
+# Plot
+plt.figure(figsize=(10,6))
+top_spam_words.sort_values().plot.barh(color='purple')
+plt.title("Top 20 Spam Indicators")
+plt.xlabel("Coefficient Value")
+plt.show()
+def predict_spam(text):
+    """Classify new messages"""
+    text_vect = vectorizer.transform([text])
+    prediction = model.predict(text_vect)[0]
+    probability = model.predict_proba(text_vect)[0][1]
+    return "SPAM" if prediction == 1 else "HAM", probability
+
+# Test
+test_text = "You've won a $1000 gift card! Click here: bit.ly/fake-link"
+result, prob = predict_spam(test_text)
+print(f"Result: {result} | Spam Probability: {prob:.2%}")
+# Try different classifiers
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
+
+# Test Naive Bayes
+nb_model = MultinomialNB()
+nb_model.fit(X_train, y_train)
+nb_acc = accuracy_score(y_test, nb_model.predict(X_test))
+print(f"Naive Bayes Accuracy: {nb_acc:.2%}")
+
+# Test Random Forest
+rf_model = RandomForestClassifier()
+rf_model.fit(X_train, y_train)
+rf_acc = accuracy_score(y_test, rf_model.predict(X_test))
+print(f"Random Forest Accuracy: {rf_acc:.2%}")
