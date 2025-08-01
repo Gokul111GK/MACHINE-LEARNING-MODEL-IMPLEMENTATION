@@ -1,1 +1,51 @@
+# Check label distribution
+print(df['label'].value_counts())
+sns.countplot(x='label', data=df)
+plt.title('Spam vs Ham Distribution')
+plt.show()
+# Convert labels to numbers (spam=1, ham=0)
+df['label'] = df['label'].map({'spam': 1, 'ham': 0})
 
+# Split data
+X = df['message']  # Features (text messages)
+y = df['label']    # Target
+
+# Text vectorization (convert words to numbers)
+vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+X_vect = vectorizer.fit_transform(X)
+
+# Split into training (80%) and testing (20%)
+X_train, X_test, y_train, y_test = train_test_split(
+    X_vect, y, test_size=0.2, random_state=42
+)
+print(f"Training samples: {X_train.shape[0]}")
+print(f"Testing samples: {X_test.shape[0]}")
+# Initialize and train model
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+# Test prediction
+test_message = ["WINNER!! Claim your free iPhone now!!!"]
+test_vect = vectorizer.transform(test_message)
+print("Prediction:", model.predict(test_vect)[0])  # Should output 1 (spam)
+
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy:.2%}")
+
+# Confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=['Ham', 'Spam'], 
+            yticklabels=['Ham', 'Spam'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Classification report
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
